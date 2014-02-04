@@ -73,6 +73,7 @@
     <orderEntry type="library" exported="" name="ComAndroidSupportGridlayoutV71900.aar" level="project" />
     <orderEntry type="library" exported="" name="support-v4-19.0.0" level="project" />
     <orderEntry type="library" exported="" name="ComAndroidSupportAppcompatV71900.aar" level="project" />
+    <orderEntry type="library" exported="" name="commons-io-1.3.2" level="project" />
   </component>
 </module>
 

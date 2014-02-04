@@ -1,21 +1,34 @@
 package ru.spb.cupchinolabs.mytraffic;
 
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
-import android.content.Context;
-import android.os.Build;
+import android.app.Activity;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.makeText;
+
 public class MainActivity extends ActionBarActivity implements ActionBar.OnNavigationListener {
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     /**
      * The serialization (saved instance state) Bundle key representing the
@@ -26,6 +39,7 @@ public class MainActivity extends ActionBarActivity implements ActionBar.OnNavig
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_PROGRESS);
         setContentView(R.layout.activity_main);
 
         // Set up the action bar to show a dropdown list.
@@ -40,12 +54,39 @@ public class MainActivity extends ActionBarActivity implements ActionBar.OnNavig
                         actionBar.getThemedContext(),
                         android.R.layout.simple_list_item_1,
                         android.R.id.text1,
-                        new String[] {
+                        new String[]{
                                 getString(R.string.title_section1),
                                 getString(R.string.title_section2),
                                 getString(R.string.title_section3),
                         }),
                 this);
+        WebView webview = (WebView) findViewById(R.id.webView);
+
+        webview.getSettings().setJavaScriptEnabled(true);
+
+        final Activity activity = this;
+        webview.setWebChromeClient(new WebChromeClient() {
+            public void onProgressChanged(WebView view, int progress) {
+                // Activities and WebViews measure progress with different scales.
+                // The progress meter will automatically disappear when we reach 100%
+                activity.setProgress(progress * 1000);
+            }
+        });
+        webview.setWebViewClient(new WebViewClient() {
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                makeText(activity, "Oh no! " + description, LENGTH_SHORT).show();
+            }
+        });
+
+        try (InputStream trafficHtmlAsStream = getBaseContext().getResources().openRawResource(R.raw.traffic)){
+            String trafficHtmlAsString =
+                    IOUtils.toString(trafficHtmlAsStream);
+            webview.loadData(trafficHtmlAsString, "text/html", "utf-8");
+
+        } catch (IOException e) {
+            Log.e(TAG, "can't close resource", e);
+        }
+
     }
 
     @Override
