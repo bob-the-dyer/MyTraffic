@@ -1,24 +1,31 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Быстрый старт. Размещение интерактивной карты на странице</title>
+    <title>//TODO import ymap js script in order not to load it every time</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <script src="http://api-maps.yandex.ru/2.0-stable/?load=package.standard,package.traffic&lang=ru-RU"
-            type="text/javascript"></script>
+    <script type="text/javascript" src="http://api-maps.yandex.ru/2.0-stable/?load=package.standard,package.traffic&lang=ru-RU">
+    </script>
     <script type="text/javascript">
         ymaps.ready(init);
         var myMap;
 
         function init(){
+            console.log("starting init of ymap ...");
+
+            var firstCoord = Location.getFirstCoord();
+            var secondCoord = Location.getSecondCoord();
+            var myZoom = Location.getZoom();
+
+            console.log("firstCoord = " + firstCoord + ", secondCoord = " + secondCoord + ", zoom = " + myZoom);
+
             myMap = new ymaps.Map ("map", {
-                center: [59.93, 30.31],
-                zoom: 14
+                center: [firstCoord, secondCoord],
+                zoom: myZoom
             });
 
             myMap.controls.add(
                new ymaps.control.ZoomControl()
             );
-
 
             var actualProvider = new ymaps.traffic.provider.Actual({}, {infoLayerShown: true});
             actualProvider.setMap(myMap);
@@ -28,14 +35,30 @@
                 trafficInfoOpenBalloonOnClick: false
             });
 
-            myMap.geoObjects.add(myPlacemark);
+            myMap.events.add("actionend", function(){
+                saveNewLocation();
+            });
+
+            console.log("finishing init of ymap ...");
+        }
+
+        function saveNewLocation(){
+            var firstCoord = myMap.getCenter()[0];
+            var secondCoord = myMap.getCenter()[1];
+            var myZoom = myMap.getZoom();
+
+            console.log("saving new location of ymap: firstCoord = " + firstCoord + ", secondCoord = " + secondCoord + ", zoom = " + myZoom);
+
+            Location.setFirstCoord(firstCoord);
+            Location.setSecondCoord(secondCoord);
+            Location.setZoom(myZoom);
         }
 
     </script>
 </head>
 
-<body>
-<div id="map" style="width: 450px; height: 350px;"></div>
+<body onunload="saveNewLocation()">
+    <div id="map" style="width: 450px; height: 350px;"></div>
 </body>
 
 </html>

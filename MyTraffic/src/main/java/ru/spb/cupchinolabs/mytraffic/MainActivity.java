@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -60,9 +61,19 @@ public class MainActivity extends ActionBarActivity implements ActionBar.OnNavig
                                 getString(R.string.title_section3),
                         }),
                 this);
+
+        prepareWebView();
+
+    }
+
+    private void prepareWebView() {
+        Log.d(TAG, "starting to prepare webview ...");
+
         WebView webview = (WebView) findViewById(R.id.webView);
 
         webview.getSettings().setJavaScriptEnabled(true);
+
+        webview.addJavascriptInterface(Location.INSTANCE, "Location");
 
         final Activity activity = this;
         webview.setWebChromeClient(new WebChromeClient() {
@@ -70,6 +81,12 @@ public class MainActivity extends ActionBarActivity implements ActionBar.OnNavig
                 // Activities and WebViews measure progress with different scales.
                 // The progress meter will automatically disappear when we reach 100%
                 activity.setProgress(progress * 1000);
+            }
+
+            @Override
+            public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
+                Log.d(TAG, consoleMessage.message());
+                return true;
             }
         });
         webview.setWebViewClient(new WebViewClient() {
@@ -81,12 +98,14 @@ public class MainActivity extends ActionBarActivity implements ActionBar.OnNavig
         try (InputStream trafficHtmlAsStream = getBaseContext().getResources().openRawResource(R.raw.traffic)){
             String trafficHtmlAsString =
                     IOUtils.toString(trafficHtmlAsStream);
-            webview.loadData(trafficHtmlAsString, "text/html", "utf-8");
+            Log.d(TAG, "starting to load data ...");
+            webview.loadData(trafficHtmlAsString, "text/html", "utf-8");//TODO move from UI thread
+            Log.d(TAG, "Loading data finished!");
 
         } catch (IOException e) {
             Log.e(TAG, "can't close resource", e);
         }
-
+        Log.d(TAG, "Preparing of webview finished!");
     }
 
     @Override
